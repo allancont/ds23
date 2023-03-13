@@ -58,7 +58,7 @@ with dataset:
 
 with features:
     st.header('Metodologia Aplicada')
-    st.write('Para o conjunto de dados analisado foi utilizado o Random Forest, um algoritmo de machine learn empregado para prever valores a partir de um conjunto de variáveis explicativas gerando múltiplas árvores de regressão através da obtenção da média das predições de todas as árvores, obtendo assim, uma predição mais precisa e estável 
+    st.write('Para o conjunto de dados analisado foi utilizado o Random Forest, um algoritmo de machine learn empregado para prever valores a partir de um conjunto de variáveis explicativas gerando múltiplas árvores de regressão através da obtenção da média das predições de todas as árvores, obtendo assim, uma predição mais precisa e estável.') 
     st.write('Devido à sua capacidade de lidar com grandes conjuntos de dados e com um elevado número de variáveis, o Random Forest tem se destacado como uma das mais robustas e poderosas técnicas de aprendizado de máquina devido à:')
     lista = ["Alta precisão","Boa generalização","Robustez a dados ausentes e valores extremos","Seleção de recursos","Interpretabilidade ampla"]
     for item in lista:
