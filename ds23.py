@@ -58,8 +58,8 @@ with dataset:
 
 with features:
     st.header('Metodologia Aplicada')
-    st.write('Para o conjunto de dados obtido foi utilizado o algorítmo Random Forest.')
-    st.write('O Random Forest é uma técnica de aprendizado de máquina utilizada para prever valores de uma variável alvo - como as vendas, por exemplo - a partir de um conjunto de variáveis explicativas. Essa técnica é baseada em um conjunto de árvores de decisão que são construídas com subconjuntos aleatórios dos dados e variáveis. Cada árvore é treinada em um subconjunto dos dados e, em seguida, a predição final é obtida pela média das predições de todas as árvores.')
+    st.write('Para o conjunto de dados obtido foi utilizado o Random Forest, um algorítimo de machine learn utilizado para prever valores de uma variável alvo - como as vendas, por exemplo - a partir de um conjunto de variáveis explicativas.')
+    st.write('A partir daí, são criadas múltiplas árvores de regressão que são construídas com subconjuntos aleatórios dos dados e variáveis, gerando uma predição mais precisa e estável através da obtenção da média das predições de todas as árvores.')
 
 with model_training:
     st.header('Simulações')
