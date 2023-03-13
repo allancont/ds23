@@ -58,7 +58,7 @@ with dataset:
 
 with features:
     st.header('Metodologia Aplicada')
-    st.write('Para o conjunto de dados obtido foi utilizado o Random Forest, um algorítimo de machine learn utilizado para prever valores de uma variável alvo - como as vendas, por exemplo - a partir de um conjunto de variáveis explicativas.')
+    st.write('Para o conjunto de dados obtido foi utilizado o Random Forest, um algoritmo de machine learn utilizado para prever valores de uma variável alvo - como as vendas, por exemplo - a partir de um conjunto de variáveis explicativas.')
     st.write('A partir daí, são criadas múltiplas árvores de regressão que são construídas com subconjuntos aleatórios dos dados e variáveis, gerando uma predição mais precisa e estável através da obtenção da média das predições de todas as árvores.')
 
 with model_training:
