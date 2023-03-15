@@ -6,6 +6,8 @@ import folium
 from folium.plugins import HeatMap
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster, HeatMap
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 header = st.container()
 dataset = st.container()
@@ -18,11 +20,11 @@ def load_data(file_data):
     try:
         return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';')
     except:
-        return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';',parse_dates=['periodo'])
-
+        return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';',encoding='latin-1',parse_dates=['periodo'])#.encode('utf-8')
+    
 file_path_vendas = "vendas.csv" #"data/vendas.csv"
 file_path_vendas_predita2 = "vendas_predita2.csv"#"data/vendas_predita2.csv"
-
+file_path_graf = "df_graf.csv"
 with header:
     st.title ('Estudo de viabilidade econômica DS-23')
     st.header('Apresentação')
@@ -54,11 +56,36 @@ with dataset:
     df_soma = df_vendas.groupby('mes_ano')['venda_total'].sum()
     
     st.markdown('**Vendas mensais utilizadas no período**')
+    # Grafico 1: vendas mensais
     st.bar_chart(df_soma,use_container_width=True,width=5)
+    
+    st.markdown('**Característica dos dados com relação à população**')
+    df_graf = load_data(file_path_graf)
+    plt.rc('figure', figsize=(12, 4))
+    fig, axes = plt.subplots(1, 2)
+
+    # Gráfico 2: venda por predominância da população
+    ax1 = axes[0]
+    sns.countplot(x="predominancia", data=df_graf, dodge=True, ax = ax1)
+    ax1.yaxis.grid(False)
+    ax1.set_ylabel("Qtde de vendas realizadas")
+    ax1.set_xlabel("Predominância da população")
+
+    # Gráfico 3: Venda total em relação à população
+    df_graf3=df_graf.groupby(['Cidade','predominancia','populacao'])['venda_total'].mean().to_frame().reset_index()
+    ax2 = axes[1]
+    ax2.scatter(df_graf3['populacao'], df_graf3['venda_total'])
+    # ax2.set_yscale('log')
+    ax2.set_xlabel('Venda total em relação à população')
+    ax2.set_ylabel('Venda média')
+    plt.subplots_adjust(wspace=.5, hspace=0.4)
+    # plt.show()
+    st.pyplot(fig)
+
 
 with features:
     st.header('Metodologia Aplicada')
-    st.write('Para o conjunto de dados analisado foi utilizado o Random Forest, um algoritmo de machine learn empregado para prever valores a partir de um conjunto de variáveis explicativas gerando múltiplas árvores de regressão através da obtenção da média das predições de todas as árvores, obtendo assim, uma predição mais precisa e estável.') 
+    st.write('Para analisar o conjunto de dados, utilizou-se o algoritmo Random Forest, uma técnica de machine learning capaz de prever valores com base em um conjunto de variáveis explicativas. Esse algoritmo gera múltiplas árvores de regressão, obtendo a média das previsões de todas as árvores para produzir uma predição mais precisa e estável.') 
     st.write('Devido à sua capacidade de lidar com grandes conjuntos de dados e com um elevado número de variáveis, o Random Forest tem se destacado como uma das mais robustas e poderosas técnicas de aprendizado de máquina devido à:')
     lista = ["Alta precisão","Boa generalização","Robustez a dados ausentes e valores extremos","Seleção de recursos","Interpretabilidade ampla"]
     for item in lista:
@@ -68,9 +95,10 @@ with features:
 with model_training:
     st.header('Simulações')
     st.write('A seguir poderão ser feitas várias simulações de venda em cidades nos estados de **MG** e **ES**.')
+    # st.write(df.sample(5))
     sel_col, disp_col = st.columns(2) 
     cidades = df.cidade.tolist()  
-
+    
     with sel_col:
         cidade_selecionada = st.selectbox('Selecione uma cidade:', cidades)
         km_dist=sel_col.slider("Qual o raio em km você deseja obter para compor a região da cidade pesquisada?",min_value=10,max_value=200,value=50,step=10)
@@ -100,6 +128,7 @@ with model_training:
         st.markdown('**Venda total projetada na região: R$ {:,.2f}**'.format(total).replace(',', '.'))
       
     st.markdown(f"**Mapa de vendas projetadas por região num raio de {km_dist} km**")
+    st.write(df.sample(3))
 
     #Criando o objeto do mapa
     # with sel_col:
@@ -147,9 +176,4 @@ with model_training:
 
     
     # Exibir o mapa com o heatmap e os marcadores no Streamlit
-    folium_static(mapa2)
-
-    
-
-
-    
+    folium_static(mapa2) 
