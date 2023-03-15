@@ -128,7 +128,6 @@ with model_training:
         st.markdown('**Venda total projetada na região: R$ {:,.2f}**'.format(total).replace(',', '.'))
       
     st.markdown(f"**Mapa de vendas projetadas por região num raio de {km_dist} km**")
-#     st.write(df.sample(3))
 
     #Criando o objeto do mapa
     # with sel_col:
