@@ -24,7 +24,7 @@ protobuf==3.20.3
 
 
 ### Link para aplicação (LIVE)
-https://ds23.onrender.com/
+https://app-ds23.onrender.com/
 
 
 
