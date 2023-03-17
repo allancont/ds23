@@ -18,12 +18,14 @@ model_training  = st.container()
 @st.cache_data
 def load_data(file_data):
     try:
-        return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';')
+        return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';',parse_dates=['periodo'])
     except:
-        return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';',encoding='latin-1',parse_dates=['periodo'])#.encode('utf-8')
-    
+        return pd.read_csv(file_data, dtype=dtypes,decimal=',',sep=';',encoding='latin-1')#.encode('utf-8')
+        
+
+
 file_path_vendas = "vendas.csv" #"data/vendas.csv"
-file_path_vendas_predita2 = "vendas_predita2.csv"#"data/vendas_predita2.csv"
+file_path_vendas_predita2 = "vendas_predita.csv"#"data/vendas_predita2.csv"
 file_path_graf = "df_graf.csv"
 with header:
     st.title ('Estudo de viabilidade econômica DS-23')
@@ -54,12 +56,19 @@ with dataset:
 
     df_vendas['Cidade']=df_vendas['Cidade'].str.upper()
     df_soma = df_vendas.groupby('mes_ano')['venda_total'].sum()
-    
-    st.markdown('**Vendas mensais utilizadas no período**')
+
+############################################
+#### DEMONSTRAÇÃO DOS DADOS TRABALHADOS ####
+############################################    
+
+    st.markdown('**Dados utilizados**')
+    st.write('Vendas mensais')
     # Grafico 1: vendas mensais
     st.bar_chart(df_soma,use_container_width=True,width=5)
-    
-    st.markdown('**Característica dos dados com relação à população**')
+    st.markdown('População')
+    sel_col, disp_col = st.columns(2)
+    with disp_col:
+        qt_pop=st.slider("*População em mil habitantes*",min_value=10,max_value=300,value=100,step=10)
     df_graf = load_data(file_path_graf)
     plt.rc('figure', figsize=(12, 4))
     fig, axes = plt.subplots(1, 2)
@@ -73,24 +82,29 @@ with dataset:
 
     # Gráfico 3: Venda total em relação à população
     df_graf3=df_graf.groupby(['Cidade','predominancia','populacao'])['venda_total'].mean().to_frame().reset_index()
+    df_graf3=df_graf3[(df_graf3['Cidade']!='SÃO JOÃO DO JACUTINGA')&(df_graf3['Cidade']!='SANTO ANTÔNIO DO MANHUAÇU')]
+    df_graf3=df_graf3[(df_graf3['populacao']<=qt_pop*1000)]
     ax2 = axes[1]
     ax2.scatter(df_graf3['populacao'], df_graf3['venda_total'])
     # ax2.set_yscale('log')
-    ax2.set_xlabel('Venda total em relação à população')
+    ax2.set_xlabel('Venda média em relação à população')
     ax2.set_ylabel('Venda média')
     plt.subplots_adjust(wspace=.5, hspace=0.4)
     # plt.show()
     st.pyplot(fig)
-
+    
 
 with features:
-    st.header('Metodologia Aplicada')
+    st.header('Metodologia aplicada')
     st.write('Para analisar o conjunto de dados, utilizou-se o algoritmo Random Forest, uma técnica de machine learning capaz de prever valores com base em um conjunto de variáveis explicativas. Esse algoritmo gera múltiplas árvores de regressão, obtendo a média das previsões de todas as árvores para produzir uma predição mais precisa e estável.') 
     st.write('Devido à sua capacidade de lidar com grandes conjuntos de dados e com um elevado número de variáveis, o Random Forest tem se destacado como uma das mais robustas e poderosas técnicas de aprendizado de máquina devido à:')
     lista = ["Alta precisão","Boa generalização","Robustez a dados ausentes e valores extremos","Seleção de recursos","Interpretabilidade ampla"]
     for item in lista:
              st.write("- " + item)
              
+######################################
+#### SIMULAÇÃO DE VENDAS PREDITAS ####
+######################################
 
 with model_training:
     st.header('Simulações')
@@ -128,51 +142,54 @@ with model_training:
         st.markdown('**Venda total projetada na região: R$ {:,.2f}**'.format(total).replace(',', '.'))
       
     st.markdown(f"**Mapa de vendas projetadas por região num raio de {km_dist} km**")
-
-    #Criando o objeto do mapa
-    # with sel_col:
+############################
+#### HEATMAP DE VENDAS  ####
+############################
+  
     region = st.radio("Detalhe da visualização do mapa:",('Micro', 'Macro'),index=1)
     if region == 'Micro':
-        mapa2 = folium.Map(location=[lat_ref, lon_ref], zoom_start=10)
+        mapa = folium.Map(location=[lat_ref, lon_ref], zoom_start=10)
     else:
-        mapa2 = folium.Map(location=[-18.912998, -43.940933], zoom_start=6)
-    data=df[['cidade','latitude', 'longitude', 'venda_predita']]#.copy()
-    ipa_loc=(data[(data['latitude']==-19.7992)&(data['longitude']==-41.7164)].index[0])
-    data.drop(ipa_loc,inplace=True)
+        mapa = folium.Map(location=[-18.912998, -43.940933], zoom_start=6)
 
-    # Adicione um mapa de calor com base nos dados de vendas
-    dt1=data[['latitude', 'longitude', 'venda_predita']]
-    heatmap = HeatMap(data=dt1.values.tolist(),
-                      name='Venda projetada',
-                      control=True,
-                      show=True,
-                      min_opacity=0.30,
-                      radius=20)
-    heatmap.add_to(mapa2)
+    data = df[['cidade', 'latitude', 'longitude', 'venda_predita', 'populacao', 'pib_percapita', 'predominancia_pop_rural', 'IDHM']]
+    data['predominancia'] = data['predominancia_pop_rural'].apply(lambda x: 'Urbana' if x == 0 else 'Rural')
+    # st.write(data.sample(5))
 
-    # Criar uma função para exibir a soma das vendas previstas nos clusters
-    def soma_venda_predita(cluster):
-        soma = sum([float(m.get_children()[0].get_tooltip().split(": ")[1].replace(",", ".")) for m in cluster._markers])
-        return f'Soma de Vendas Previstas: R$ {soma:,.2f}'
+    ipa_loc = (data[(data['latitude'] == -19.7992) & (data['longitude'] == -41.7164)].index[0])
+    data.drop(ipa_loc, inplace=True)
+    colors = {'Urbana': 'blue', 'Rural': 'green'}
 
-    # Criar um objeto MarkerCluster para agrupar os marcadores próximos
-    # marker_cluster = MarkerCluster(max_cluster_radius=km_dist) #cluster escolhilho pelo usuário
-    marker_cluster = MarkerCluster(max_cluster_radius=km_dist) #cluster fixo
-    
-    # Adicionar marcadores personalizados com os valores de 'venda_predita'
-    for lat, lon, venda_predita in dt1.values.tolist(): #for lat, lon, venda_predita in data.values.tolist():
+    # Criar lista de coordenadas e valores de vendas preditas
+    coordenadas_vendas = data[['latitude', 'longitude', 'venda_predita']].values.tolist()
+
+    # Adicionar camada de heatmap
+    HeatMap(coordenadas_vendas, 
+            max_val=max(data['venda_predita']),
+            name='Venda projetada',
+            control=True,
+            show=True,
+            min_opacity=0.30,
+            radius=20).add_to(mapa)
+
+    # Adicionar marcadores com clusterização para cada cidade
+    mc = MarkerCluster(max_cluster_radius=km_dist,
+                       spiderfy_on_max_zoom=False)
+
+    for i in data.index:
+        cidade = data['cidade'][i]
+        lat = data['latitude'][i]
+        lon = data['longitude'][i]
+        vendas = data['venda_predita'][i]
+        predominancia = data['predominancia'][i]
+        popup_text = f"População: {data['populacao'][i]:,.0f}<br>PIB per capita: {data['pib_percapita'][i]:,.0f}<br>IDHM: {data['IDHM'][i]:,.2f}<br>Predominância: {data['predominancia'][i]}"
+        popup = folium.Popup(popup_text, max_width=300)
         folium.Marker(location=[lat, lon], 
-                    icon=None,
-                    # popup=cidade("Mom & Pop Arrow Shop >>", parse_html=True),
-                    tooltip=f'R$ {venda_predita:,.0f}'.replace(',', '.')
-                    ).add_to(marker_cluster)
-                        
-    marker_cluster.add_to(mapa2)
+                      tooltip=f'{cidade}<br> R$ {vendas:,.2f}', 
+                      popup=popup,
+                      icon=folium.Icon(color=colors[predominancia])
+                      ).add_to(mc)
 
-    # Adicionar um controle de camadas para exibir a soma das vendas previstas nos clusters
-    folium.map.LayerControl(collapsed=False, overlay=True, control=False, position='topright').add_to(mapa2)
-    marker_cluster.add_child(folium.map.Popup(soma_venda_predita))
+    mc.add_to(mapa)
 
-    
-    # Exibir o mapa com o heatmap e os marcadores no Streamlit
-    folium_static(mapa2) 
+    folium_static(mapa)
