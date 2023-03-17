@@ -13,13 +13,13 @@ O presente estudo busca suprir essa busca por informação através do desenvolv
 ## Utilização
 
 ### Dependencias
-Principais bibliotecas utilizadas na aplicação.
-folium==0.14.0
-geopy==2.3.0
-numpy==1.24.2
-pandas==1.5.3
-streamlit==1.20.0
-streamlit_folium==0.11.1
+Principais bibliotecas utilizadas na aplicação.<br>
+folium==0.14.0<br>
+geopy==2.3.0<br>
+numpy==1.24.2<br>
+pandas==1.5.3<br>
+streamlit==1.20.0<br>
+streamlit_folium==0.11.1<br>
 protobuf==3.20.3
 
 
